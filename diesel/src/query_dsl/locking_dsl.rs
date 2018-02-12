@@ -30,3 +30,63 @@ where
         self.as_query().for_update()
     }
 }
+
+/// The `skip_locked` method
+///
+/// This trait should not be relied on directly by most apps. Its behavior is
+/// provided by [`QueryDsl`]. However, you may need a where clause on this trait
+/// to call `for_update` from generic code.
+///
+/// [`QueryDsl`]: ../trait.QueryDsl.html
+pub trait SkipLockedDsl {
+    /// The type returned by `skip_locked`. See [`dsl::SkipLocked`] for
+    /// convenient access to this type.
+    ///
+    /// [`dsl::SkipLocked`]: ../../dsl/type.SkipLocked.html
+    type Output;
+
+    /// See the trait level documentation
+    fn skip_locked(self) -> Self::Output;
+}
+
+impl<T> SkipLockedDsl for T
+where
+    T: Table + AsQuery,
+    T::Query: SkipLockedDsl,
+{
+    type Output = <T::Query as SkipLockedDsl>::Output;
+
+    fn skip_locked(self) -> Self::Output {
+        self.as_query().skip_locked()
+    }
+}
+
+/// The `no_wait` method
+///
+/// This trait should not be relied on directly by most apps. Its behavior is
+/// provided by [`QueryDsl`]. However, you may need a where clause on this trait
+/// to call `no_wait` from generic code.
+///
+/// [`QueryDsl`]: ../trait.QueryDsl.html
+pub trait NoWaitDsl {
+    /// The type returned by `no_wait`. See [`dsl::NoWait`] for
+    /// convenient access to this type.
+    ///
+    /// [`dsl::NoWait`]: ../../dsl/type.NoWait.html
+    type Output;
+
+    /// See the trait level documentation
+    fn no_wait(self) -> Self::Output;
+}
+
+impl<T> NoWaitDsl for T
+where
+    T: Table + AsQuery,
+    T::Query: NoWaitDsl,
+{
+    type Output = <T::Query as NoWaitDsl>::Output;
+
+    fn no_wait(self) -> Self::Output {
+        self.as_query().no_wait()
+    }
+}

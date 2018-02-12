@@ -206,6 +206,12 @@ pub mod helper_types {
     /// Represents the return type of `.for_update()`
     pub type ForUpdate<Source> = <Source as ForUpdateDsl>::Output;
 
+    /// Represents the return type of `.skip_locked()`
+    pub type SkipLocked<Source> = <Source as SkipLockedDsl>::Output;
+
+    /// Represents the return type of `.no_wait()`
+    pub type NoWait<Source> = <Source as NoWaitDsl>::Output;
+
     /// Represents the return type of `.find(pk)`
     pub type Find<Source, PK> = <Source as FindDsl<PK>>::Output;
 

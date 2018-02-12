@@ -61,7 +61,7 @@ pub mod methods {
     pub use super::filter_dsl::*;
     pub use super::limit_dsl::LimitDsl;
     pub use super::load_dsl::{ExecuteDsl, LoadQuery};
-    pub use super::locking_dsl::ForUpdateDsl;
+    pub use super::locking_dsl::{ForUpdateDsl, SkipLockedDsl, NoWaitDsl};
     pub use super::offset_dsl::OffsetDsl;
     pub use super::order_dsl::OrderDsl;
     pub use super::select_dsl::SelectDsl;
@@ -735,6 +735,40 @@ pub trait QueryDsl: Sized {
         Self: methods::ForUpdateDsl,
     {
         methods::ForUpdateDsl::for_update(self)
+    }
+
+    /// Adds `SKIP LOCKED` to the end of a `FOR UPDATE` clause.
+    ///
+    /// This method is only available for PostgreSQL.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Executes `SELECT * FROM users FOR UPDATE SKIP LOCKED`
+    /// users.for_update().skip_locked().load(&connection)
+    /// ```
+    fn skip_locked(self) -> SkipLocked<Self>
+    where
+        Self: methods::SkipLockedDsl,
+    {
+        methods::SkipLockedDsl::skip_locked(self)
+    }
+
+    /// Adds `NOWAIT` to the end of a `FOR UPDATE` clause.
+    ///
+    /// This method is only available for PostgreSQL.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Executes `SELECT * FROM users FOR UPDATE NOWAIT`
+    /// users.for_update().no_wait().load(&connection)
+    /// ```
+    fn no_wait(self) -> NoWait<Self>
+    where
+        Self: methods::NoWaitDsl,
+    {
+        methods::NoWaitDsl::no_wait(self)
     }
 
     /// Boxes the pieces of a query into a single type.

@@ -12,4 +12,15 @@ impl<DB: Backend> QueryFragment<DB> for NoForUpdateClause {
 }
 
 #[derive(Debug, Clone, Copy, QueryId)]
-pub struct ForUpdateClause;
+pub struct ForUpdateClause<Modifier> {
+    pub(crate) modifier: Modifier
+}
+
+#[derive(Debug, Clone, Copy, QueryId)]
+pub struct NoModifier;
+
+#[derive(Debug, Clone, Copy, QueryId)]
+pub struct SkipLockedModifier;
+
+#[derive(Debug, Clone, Copy, QueryId)]
+pub struct NoWaitModifier;
