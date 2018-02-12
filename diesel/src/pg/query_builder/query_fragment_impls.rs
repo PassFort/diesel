@@ -1,6 +1,7 @@
 use pg::Pg;
 use query_builder::{AstPass, QueryFragment};
-use query_builder::for_update_clause::{ForUpdateClause, NoModifier, SkipLockedModifier, NoWaitModifier};
+use query_builder::for_update_clause::{ForUpdateClause, NoModifier, NoWaitModifier,
+                                       SkipLockedModifier};
 use result::QueryResult;
 
 impl QueryFragment<Pg> for ForUpdateClause<NoModifier> {

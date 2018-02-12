@@ -61,7 +61,7 @@ pub mod methods {
     pub use super::filter_dsl::*;
     pub use super::limit_dsl::LimitDsl;
     pub use super::load_dsl::{ExecuteDsl, LoadQuery};
-    pub use super::locking_dsl::{ForUpdateDsl, SkipLockedDsl, NoWaitDsl};
+    pub use super::locking_dsl::{ForUpdateDsl, NoWaitDsl, SkipLockedDsl};
     pub use super::offset_dsl::OffsetDsl;
     pub use super::order_dsl::OrderDsl;
     pub use super::select_dsl::SelectDsl;
