@@ -30,17 +30,17 @@ impl PgResult {
                 ))
             }
             _ => {
-                let error_kind =
-                    match get_result_field(internal_result.as_ptr(), ResultField::SqlState) {
-                        Some(error_codes::UNIQUE_VIOLATION) => DatabaseErrorKind::UniqueViolation,
-                        Some(error_codes::FOREIGN_KEY_VIOLATION) => {
-                            DatabaseErrorKind::ForeignKeyViolation
-                        },
-                        Some(error_codes::LOCK_NOT_AVAILABLE) => {
-                            DatabaseErrorKind::LockNotAvailable
-                        },
-                        _ => DatabaseErrorKind::__Unknown,
-                    };
+                let error_kind = match get_result_field(
+                    internal_result.as_ptr(),
+                    ResultField::SqlState,
+                ) {
+                    Some(error_codes::UNIQUE_VIOLATION) => DatabaseErrorKind::UniqueViolation,
+                    Some(error_codes::FOREIGN_KEY_VIOLATION) => {
+                        DatabaseErrorKind::ForeignKeyViolation
+                    }
+                    Some(error_codes::LOCK_NOT_AVAILABLE) => DatabaseErrorKind::LockNotAvailable,
+                    _ => DatabaseErrorKind::__Unknown,
+                };
                 let error_information = Box::new(PgErrorInformation(internal_result));
                 Err(Error::DatabaseError(error_kind, error_information))
             }

@@ -268,7 +268,7 @@ fn select_for_update_locks_selected_rows() {
 #[test]
 fn select_for_update_modifiers() {
     use self::users_select_for_update::dsl::*;
-    use diesel::result::{Error, DatabaseErrorKind};
+    use diesel::result::{DatabaseErrorKind, Error};
 
     // We need to actually commit some data for the
     // test
@@ -294,7 +294,7 @@ fn select_for_update_modifiers() {
     conn_1
         .execute("INSERT INTO users_select_for_update (name) VALUES ('Sean'), ('Tess')")
         .unwrap();
-    
+
     // Now both connections have begun a transaction
     conn_1.begin_test_transaction().unwrap();
 
@@ -312,12 +312,12 @@ fn select_for_update_modifiers() {
         .for_update()
         .no_wait()
         .first::<User>(&conn_2);
-    
+
     // Make sure we errored in the correct way (without timing out)
     assert!(result.is_err());
     match result.err().unwrap() {
-        Error::DatabaseError(DatabaseErrorKind::LockNotAvailable, _) => {},
-        e => panic!("{:?}", e)
+        Error::DatabaseError(DatabaseErrorKind::LockNotAvailable, _) => {}
+        e => panic!("{:?}", e),
     }
 
     // Try to access the "Sean" row with `SKIP LOCKED`
@@ -327,7 +327,7 @@ fn select_for_update_modifiers() {
         .skip_locked()
         .first::<User>(&conn_3)
         .unwrap();
-    
+
     // Make sure got back "Tess"
     assert_eq!(tess.name, "Tess");
 }
