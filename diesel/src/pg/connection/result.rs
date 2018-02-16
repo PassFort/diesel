@@ -35,7 +35,10 @@ impl PgResult {
                         Some(error_codes::UNIQUE_VIOLATION) => DatabaseErrorKind::UniqueViolation,
                         Some(error_codes::FOREIGN_KEY_VIOLATION) => {
                             DatabaseErrorKind::ForeignKeyViolation
-                        }
+                        },
+                        Some(error_codes::LOCK_NOT_AVAILABLE) => {
+                            DatabaseErrorKind::LockNotAvailable
+                        },
                         _ => DatabaseErrorKind::__Unknown,
                     };
                 let error_information = Box::new(PgErrorInformation(internal_result));
@@ -163,4 +166,5 @@ mod error_codes {
     //! They are not exposed programmatically through libpq.
     pub const UNIQUE_VIOLATION: &str = "23505";
     pub const FOREIGN_KEY_VIOLATION: &str = "23503";
+    pub const LOCK_NOT_AVAILABLE: &str = "55P03";
 }

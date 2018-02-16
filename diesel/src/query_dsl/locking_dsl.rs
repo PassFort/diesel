@@ -35,7 +35,7 @@ where
 ///
 /// This trait should not be relied on directly by most apps. Its behavior is
 /// provided by [`QueryDsl`]. However, you may need a where clause on this trait
-/// to call `for_update` from generic code.
+/// to call `skip_locked` from generic code.
 ///
 /// [`QueryDsl`]: ../trait.QueryDsl.html
 pub trait SkipLockedDsl {

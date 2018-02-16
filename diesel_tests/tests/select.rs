@@ -264,6 +264,74 @@ fn select_for_update_locks_selected_rows() {
     assert_eq!("Sean", next_selected_name);
 }
 
+#[cfg(feature = "postgres")]
+#[test]
+fn select_for_update_modifiers() {
+    use self::users_select_for_update::dsl::*;
+    use diesel::result::{Error, DatabaseErrorKind};
+
+    // We need to actually commit some data for the
+    // test
+    let conn_1 = connection_without_transaction();
+    let conn_2 = connection();
+    let conn_3 = connection();
+
+    // Recreate the table
+    conn_1
+        .execute("DROP TABLE IF EXISTS users_select_for_update")
+        .unwrap();
+    create_table(
+        "users_select_for_update",
+        (
+            integer("id").primary_key().auto_increment(),
+            string("name").not_null(),
+            string("hair_color"),
+        ),
+    ).execute(&conn_1)
+        .unwrap();
+
+    // Add some test data
+    conn_1
+        .execute("INSERT INTO users_select_for_update (name) VALUES ('Sean'), ('Tess')")
+        .unwrap();
+    
+    // Now both connections have begun a transaction
+    conn_1.begin_test_transaction().unwrap();
+
+    // Lock the "Sean" row
+    let _sean = users_select_for_update
+        .order_by(name)
+        .for_update()
+        .first::<User>(&conn_1)
+        .unwrap();
+
+    // Try to access the "Sean" row with `NOWAIT`
+    conn_2.execute("SET STATEMENT_TIMEOUT TO 1000").unwrap();
+    let result = users_select_for_update
+        .order_by(name)
+        .for_update()
+        .no_wait()
+        .first::<User>(&conn_2);
+    
+    // Make sure we errored in the correct way (without timing out)
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        Error::DatabaseError(DatabaseErrorKind::LockNotAvailable, _) => {},
+        e => panic!("{:?}", e)
+    }
+
+    // Try to access the "Sean" row with `SKIP LOCKED`
+    let tess = users_select_for_update
+        .order_by(name)
+        .for_update()
+        .skip_locked()
+        .first::<User>(&conn_3)
+        .unwrap();
+    
+    // Make sure got back "Tess"
+    assert_eq!(tess.name, "Tess");
+}
+
 #[test]
 fn select_can_be_called_on_query_that_is_valid_subselect_but_invalid_query() {
     let connection = connection_with_sean_and_tess_in_users_table();
