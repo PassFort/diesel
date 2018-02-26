@@ -739,7 +739,7 @@ pub trait QueryDsl: Sized {
 
     /// Adds `SKIP LOCKED` to the end of a `FOR UPDATE` clause.
     ///
-    /// This method is only available for PostgreSQL.
+    /// This modifier is only supported in PostgreSQL 9.5+ and MySQL 8+.
     ///
     /// # Example
     ///
@@ -756,7 +756,7 @@ pub trait QueryDsl: Sized {
 
     /// Adds `NOWAIT` to the end of a `FOR UPDATE` clause.
     ///
-    /// This method is only available for PostgreSQL.
+    /// This modifier is only supported in PostgreSQL 9.5+ and MySQL 8+.
     ///
     /// # Example
     ///

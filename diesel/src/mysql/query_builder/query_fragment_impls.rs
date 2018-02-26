@@ -1,11 +1,24 @@
 use mysql::Mysql;
 use query_builder::{AstPass, QueryFragment};
-use query_builder::for_update_clause::{ForUpdateClause, NoModifier};
+use query_builder::for_update_clause::{NoModifier, NoWait, SkipLocked};
 use result::QueryResult;
 
-impl QueryFragment<Mysql> for ForUpdateClause<NoModifier> {
+impl QueryFragment<Mysql> for NoModifier {
+    fn walk_ast(&self, _out: AstPass<Mysql>) -> QueryResult<()> {
+        Ok(())
+    }
+}
+
+impl QueryFragment<Mysql> for SkipLocked {
     fn walk_ast(&self, mut out: AstPass<Mysql>) -> QueryResult<()> {
-        out.push_sql(" FOR UPDATE");
+        out.push_sql(" SKIP LOCKED");
+        Ok(())
+    }
+}
+
+impl QueryFragment<Mysql> for NoWait {
+    fn walk_ast(&self, mut out: AstPass<Mysql>) -> QueryResult<()> {
+        out.push_sql(" NOWAIT");
         Ok(())
     }
 }
