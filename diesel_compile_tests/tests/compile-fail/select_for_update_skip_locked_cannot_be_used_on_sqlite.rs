@@ -2,7 +2,7 @@
 extern crate diesel;
 
 use diesel::*;
-use diesel::mysql::MysqlConnection;
+use diesel::sqlite::SqliteConnection;
 
 table! {
     users {
@@ -11,7 +11,7 @@ table! {
 }
 
 fn main() {
-    let conn = MysqlConnection::establish("").unwrap();
+    let conn = SqliteConnection::establish("").unwrap();
     users::table
         .for_update()
         .skip_locked()
