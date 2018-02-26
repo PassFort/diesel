@@ -82,9 +82,6 @@ pub enum DatabaseErrorKind {
     /// An example of a case where this would occur is if you attempted to send
     /// a query with more than 65000 bind parameters using PostgreSQL.
     UnableToSendCommand,
-    /// A lock could not be acquired, perhaps because the query was executed with
-    /// `FOR UPDATE NOWAIT` and the lock was already held.
-    LockNotAvailable,
     #[doc(hidden)]
     __Unknown, // Match against _ instead, more variants may be added in the future
 }

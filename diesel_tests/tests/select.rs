@@ -268,7 +268,6 @@ fn select_for_update_locks_selected_rows() {
 #[test]
 fn select_for_update_modifiers() {
     use self::users_select_for_update::dsl::*;
-    use diesel::result::{DatabaseErrorKind, Error};
 
     // We need to actually commit some data for the
     // test
@@ -315,9 +314,8 @@ fn select_for_update_modifiers() {
 
     // Make sure we errored in the correct way (without timing out)
     assert!(result.is_err());
-    match result.err().unwrap() {
-        Error::DatabaseError(DatabaseErrorKind::LockNotAvailable, _) => {}
-        e => panic!("{:?}", e),
+    if !format!("{:?}", result).contains("could not obtain lock on row") {
+        panic!("{:?}", result);
     }
 
     // Try to access the "Sean" row with `SKIP LOCKED`
