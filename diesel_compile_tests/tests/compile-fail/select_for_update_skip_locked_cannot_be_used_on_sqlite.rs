@@ -16,6 +16,6 @@ fn main() {
         .for_update()
         .skip_locked()
         .load(&conn)
-        //~^ ERROR: E0271
+        //~^ ERROR: E0277
         .unwrap();
 }

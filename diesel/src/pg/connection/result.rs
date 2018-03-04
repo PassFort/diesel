@@ -39,7 +39,8 @@ impl PgResult {
                         _ => DatabaseErrorKind::__Unknown,
                     };
                 let error_information = Box::new(PgErrorInformation(internal_result));
-                Err(Error::DatabaseError(error_kind, error_information))            }
+                Err(Error::DatabaseError(error_kind, error_information))
+            }
         }
     }
 
