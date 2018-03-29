@@ -1,7 +1,35 @@
 use pg::Pg;
 use query_builder::{AstPass, QueryFragment};
-use query_builder::for_update_clause::{NoModifier, NoWait, SkipLocked};
+use query_builder::for_update_clause::{ForUpdate, ForKeyShare, ForNoKeyUpdate, ForShare, NoModifier, NoWait, SkipLocked};
 use result::QueryResult;
+
+impl QueryFragment<Pg> for ForUpdate {
+    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
+        out.push_sql(" FOR UPDATE");
+        Ok(())
+    }
+}
+
+impl QueryFragment<Pg> for ForNoKeyUpdate {
+    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
+        out.push_sql(" FOR NO KEY UPDATE");
+        Ok(())
+    }
+}
+
+impl QueryFragment<Pg> for ForShare {
+    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
+        out.push_sql(" FOR SHARE");
+        Ok(())
+    }
+}
+
+impl QueryFragment<Pg> for ForKeyShare {
+    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
+        out.push_sql(" FOR KEY SHARE");
+        Ok(())
+    }
+}
 
 impl QueryFragment<Pg> for NoModifier {
     fn walk_ast(&self, _out: AstPass<Pg>) -> QueryResult<()> {

@@ -20,9 +20,9 @@ pub trait ForUpdateDsl {
 }
 
 impl<T> ForUpdateDsl for T
-where
-    T: Table + AsQuery,
-    T::Query: ForUpdateDsl,
+    where
+        T: Table + AsQuery,
+        T::Query: ForUpdateDsl,
 {
     type Output = <T::Query as ForUpdateDsl>::Output;
 
@@ -30,6 +30,39 @@ where
         self.as_query().for_update()
     }
 }
+
+
+/// The `for_no_key_update` method
+///
+/// This trait should not be relied on directly by most apps. Its behavior is
+/// provided by [`QueryDsl`]. However, you may need a where clause on this trait
+/// to call `for_no_key_update` from generic code.
+///
+/// [`QueryDsl`]: ../trait.QueryDsl.html
+
+pub trait ForNoKeyUpdateDsl {
+    /// The type returned by `for_no_key_update`. See [`dsl::ForNoKeyUpdate`] for
+    /// convenient access to this type.
+    ///
+    /// [`dsl::ForNoKeyUpdate`]: ../../dsl/type.ForNoKeyUpdate.html
+    type Output;
+
+    /// See the trait level documentation
+    fn for_no_key_update(self) -> Self::Output;
+}
+
+impl<T> ForNoKeyUpdateDsl for T
+    where
+        T: Table + AsQuery,
+        T::Query: ForNoKeyUpdateDsl,
+{
+    type Output = <T::Query as ForNoKeyUpdateDsl>::Output;
+
+    fn for_no_key_update(self) -> Self::Output {
+        self.as_query().for_no_key_update()
+    }
+}
+
 
 /// The `skip_locked` method
 ///

@@ -261,7 +261,7 @@ impl<F, S, W, O, L, Of> ForUpdateDsl for SelectStatement<F, S, NoDistinctClause,
         L,
         Of,
         NoGroupByClause,
-        ForUpdateClause<NoModifier>,
+        ForUpdateClause<ForUpdate, NoModifier>,
     >;
 
     fn for_update(self) -> Self::Output {
@@ -274,15 +274,43 @@ impl<F, S, W, O, L, Of> ForUpdateDsl for SelectStatement<F, S, NoDistinctClause,
             self.limit,
             self.offset,
             self.group_by,
-            ForUpdateClause::new(NoModifier),
+            ForUpdateClause::new(ForUpdate, NoModifier),
         )
     }
 }
 
-impl<F, S, D, W, O, L, Of, G> SkipLockedDsl
-    for SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<NoModifier>>
+impl<F, S, W, O, L, Of> ForNoKeyUpdateDsl for SelectStatement<F, S, NoDistinctClause, W, O, L, Of> {
+    type Output = SelectStatement<
+        F,
+        S,
+        NoDistinctClause,
+        W,
+        O,
+        L,
+        Of,
+        NoGroupByClause,
+        ForUpdateClause<ForNoKeyUpdate, NoModifier>,
+    >;
+
+    fn for_no_key_update(self) -> Self::Output {
+        SelectStatement::new(
+            self.select,
+            self.from,
+            self.distinct,
+            self.where_clause,
+            self.order,
+            self.limit,
+            self.offset,
+            self.group_by,
+            ForUpdateClause::new(ForNoKeyUpdate, NoModifier),
+        )
+    }
+}
+
+impl<F, S, D, W, O, L, Of, G, LM> SkipLockedDsl
+    for SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, NoModifier>>
 {
-    type Output = SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<SkipLocked>>;
+    type Output = SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, SkipLocked>>;
 
     fn skip_locked(self) -> Self::Output {
         SelectStatement::new(
@@ -294,15 +322,15 @@ impl<F, S, D, W, O, L, Of, G> SkipLockedDsl
             self.limit,
             self.offset,
             self.group_by,
-            ForUpdateClause::new(SkipLocked),
+            ForUpdateClause::new(self.for_update.lock_mode, SkipLocked),
         )
     }
 }
 
-impl<F, S, D, W, O, L, Of, G> NoWaitDsl
-    for SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<NoModifier>>
+impl<F, S, D, W, O, L, Of, G, LM> NoWaitDsl
+    for SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, NoModifier>>
 {
-    type Output = SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<NoWait>>;
+    type Output = SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, NoWait>>;
 
     fn no_wait(self) -> Self::Output {
         SelectStatement::new(
@@ -314,7 +342,7 @@ impl<F, S, D, W, O, L, Of, G> NoWaitDsl
             self.limit,
             self.offset,
             self.group_by,
-            ForUpdateClause::new(NoWait),
+            ForUpdateClause::new(self.for_update.lock_mode, NoWait),
         )
     }
 }
