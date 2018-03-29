@@ -356,6 +356,7 @@ fn select_for_no_key_update_modifiers() {
     let conn_1 = connection_without_transaction();
     let conn_2 = connection();
     let conn_3 = connection();
+    let conn_4 = connection();
 
     // Recreate the table
     conn_1
@@ -392,13 +393,13 @@ fn select_for_no_key_update_modifiers() {
 
     // Add some test data
     conn_1
-        .execute("INSERT INTO users_select_for_no_key_update (name) VALUES ('Sean'), ('Tess')")
+        .execute("INSERT INTO users_select_for_no_key_update (name) VALUES ('Sean'), ('Tess'), ('Will')")
         .unwrap();
 
 
     conn_1.begin_test_transaction().unwrap();
 
-    // Lock the "Sean" row
+    // Lock the "Sean" row, except the key
     let _sean = users_select_for_no_key_update
         .order(name)
         .for_no_key_update()
@@ -426,6 +427,27 @@ fn select_for_no_key_update_modifiers() {
 
     // Make sure got back "Tess"
     assert_eq!(tess.name, "Tess");
+
+    // Lock the "Will" row completelu
+    let will = users_select_for_no_key_update
+        .order(name)
+        .for_update()
+        .skip_locked()
+        .first::<User>(&conn_4)
+        .unwrap();
+
+    assert_eq!(will.name, "Will");
+
+    conn_2.execute("SET STATEMENT_TIMEOUT TO 1000").unwrap();
+    let result = conn_2
+        .execute("INSERT INTO users_fk_for_no_key_update (users_fk) \
+        SELECT id FROM users_select_for_no_key_update where name='Will'");
+
+    // Times out instead of inserting row
+    assert!(result.is_err());
+    if !format!("{:?}", result).contains("canceling statement due to statement timeout") {
+        panic!("{:?}", result);
+    }
 }
 
 #[test]

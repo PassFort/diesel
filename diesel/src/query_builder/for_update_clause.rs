@@ -30,6 +30,8 @@ impl<DB: Backend, L: QueryFragment<DB>, M: QueryFragment<DB>> QueryFragment<DB> 
     }
 }
 
+/// LockMode parameters
+/// All the different types of row locks tha can be acquired.
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct ForUpdate;
 
@@ -42,6 +44,8 @@ pub struct ForShare;
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct ForKeyShare;
 
+/// Modifiers
+/// To be used in conjunction with a lock mode.
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoModifier;
 
