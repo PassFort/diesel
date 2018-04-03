@@ -428,7 +428,7 @@ fn select_for_no_key_update_modifiers() {
     // Make sure got back "Tess"
     assert_eq!(tess.name, "Tess");
 
-    // Lock the "Will" row completelu
+    // Lock the "Will" row completely
     let will = users_select_for_no_key_update
         .order(name)
         .for_update()
