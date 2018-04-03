@@ -12,23 +12,40 @@ impl<DB: Backend> QueryFragment<DB> for NoForUpdateClause {
 }
 
 #[derive(Debug, Clone, Copy, QueryId)]
-pub struct ForUpdateClause<Modifier = NoModifier> {
+pub struct ForUpdateClause<LockMode = ForUpdate, Modifier = NoModifier> {
+    pub(crate) lock_mode: LockMode,
     modifier: Modifier,
 }
 
-impl<Modifier> ForUpdateClause<Modifier> {
-    pub(crate) fn new(modifier: Modifier) -> Self {
-        ForUpdateClause { modifier }
+impl<LockMode, Modifier> ForUpdateClause<LockMode, Modifier> {
+    pub(crate) fn new(lock_mode: LockMode, modifier: Modifier) -> Self {
+        ForUpdateClause { lock_mode, modifier }
     }
 }
 
-impl<DB: Backend, M: QueryFragment<DB>> QueryFragment<DB> for ForUpdateClause<M> {
+impl<DB: Backend, L: QueryFragment<DB>, M: QueryFragment<DB>> QueryFragment<DB> for ForUpdateClause<L, M> {
     fn walk_ast(&self, mut out: AstPass<DB>) -> QueryResult<()> {
-        out.push_sql(" FOR UPDATE");
-        self.modifier.walk_ast(out)
+        self.lock_mode.walk_ast(out.reborrow())?;
+        self.modifier.walk_ast(out.reborrow())
     }
 }
 
+/// LockMode parameters
+/// All the different types of row locks that can be acquired.
+#[derive(Debug, Clone, Copy, QueryId)]
+pub struct ForUpdate;
+
+#[derive(Debug, Clone, Copy, QueryId)]
+pub struct ForNoKeyUpdate;
+
+#[derive(Debug, Clone, Copy, QueryId)]
+pub struct ForShare;
+
+#[derive(Debug, Clone, Copy, QueryId)]
+pub struct ForKeyShare;
+
+/// Modifiers
+/// To be used in conjunction with a lock mode.
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct NoModifier;
 

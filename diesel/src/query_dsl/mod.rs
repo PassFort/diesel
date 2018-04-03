@@ -61,7 +61,7 @@ pub mod methods {
     pub use super::filter_dsl::*;
     pub use super::limit_dsl::LimitDsl;
     pub use super::load_dsl::{ExecuteDsl, LoadQuery};
-    pub use super::locking_dsl::{ForUpdateDsl, NoWaitDsl, SkipLockedDsl};
+    pub use super::locking_dsl::{ForUpdateDsl, ForNoKeyUpdateDsl, NoWaitDsl, SkipLockedDsl};
     pub use super::offset_dsl::OffsetDsl;
     pub use super::order_dsl::OrderDsl;
     pub use super::select_dsl::SelectDsl;
@@ -735,6 +735,28 @@ pub trait QueryDsl: Sized {
         Self: methods::ForUpdateDsl,
     {
         methods::ForUpdateDsl::for_update(self)
+    }
+
+    /// Adds `FOR NO KEY UPDATE` to the end of the select statement.
+    ///
+    /// This method is only available for MySQL and PostgreSQL. SQLite does not
+    /// provide any form of row locking.
+    ///
+    /// Additionally, `.for_update` cannot be used on queries with a distinct
+    /// clause, group by clause, having clause, or any unions. Queries with
+    /// a `FOR NO KEY UPDATE` clause cannot be boxed.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Executes `SELECT * FROM users FOR NO KEY UPDATE`
+    /// users.for_no_key_update().load(&connection)
+    /// ```
+    fn for_no_key_update(self) -> ForNoKeyUpdate<Self>
+        where
+            Self: methods::ForNoKeyUpdateDsl,
+    {
+        methods::ForNoKeyUpdateDsl::for_no_key_update(self)
     }
 
     /// Adds `SKIP LOCKED` to the end of a `FOR UPDATE` clause.
