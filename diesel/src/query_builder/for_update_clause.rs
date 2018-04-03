@@ -31,7 +31,7 @@ impl<DB: Backend, L: QueryFragment<DB>, M: QueryFragment<DB>> QueryFragment<DB> 
 }
 
 /// LockMode parameters
-/// All the different types of row locks tha can be acquired.
+/// All the different types of row locks that can be acquired.
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct ForUpdate;
 
