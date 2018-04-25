@@ -3,6 +3,20 @@ use query_builder::{AstPass, QueryFragment};
 use query_builder::locking_clause::{NoModifier, NoWait, SkipLocked};
 use result::QueryResult;
 
+impl QueryFragment<Mysql> for ForUpdate {
+    fn walk_ast(&self, mut out: AstPass<Mysql>) -> QueryResult<()> {
+        out.push_sql(" FOR UPDATE");
+        Ok(())
+    }
+}
+
+impl QueryFragment<Mysql> for ForShare {
+    fn walk_ast(&self, mut out: AstPass<Mysql>) -> QueryResult<()> {
+        out.push_sql(" FOR SHARE");
+        Ok(())
+    }
+}
+
 impl QueryFragment<Mysql> for NoModifier {
     fn walk_ast(&self, _out: AstPass<Mysql>) -> QueryResult<()> {
         Ok(())
