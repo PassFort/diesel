@@ -3,27 +3,27 @@ use query_builder::{AstPass, QueryFragment};
 use result::QueryResult;
 
 #[derive(Debug, Clone, Copy, QueryId)]
-pub struct NoForUpdateClause;
+pub struct NoLockingClause;
 
-impl<DB: Backend> QueryFragment<DB> for NoForUpdateClause {
+impl<DB: Backend> QueryFragment<DB> for NoLockingClause {
     fn walk_ast(&self, _: AstPass<DB>) -> QueryResult<()> {
         Ok(())
     }
 }
 
 #[derive(Debug, Clone, Copy, QueryId)]
-pub struct ForUpdateClause<LockMode = ForUpdate, Modifier = NoModifier> {
+pub struct LockingClause<LockMode = ForUpdate, Modifier = NoModifier> {
     pub(crate) lock_mode: LockMode,
     modifier: Modifier,
 }
 
-impl<LockMode, Modifier> ForUpdateClause<LockMode, Modifier> {
+impl<LockMode, Modifier> LockingClause<LockMode, Modifier> {
     pub(crate) fn new(lock_mode: LockMode, modifier: Modifier) -> Self {
-        ForUpdateClause { lock_mode, modifier }
+        LockingClause { lock_mode, modifier }
     }
 }
 
-impl<DB: Backend, L: QueryFragment<DB>, M: QueryFragment<DB>> QueryFragment<DB> for ForUpdateClause<L, M> {
+impl<DB: Backend, L: QueryFragment<DB>, M: QueryFragment<DB>> QueryFragment<DB> for LockingClause<L, M> {
     fn walk_ast(&self, mut out: AstPass<DB>) -> QueryResult<()> {
         self.lock_mode.walk_ast(out.reborrow())?;
         self.modifier.walk_ast(out.reborrow())

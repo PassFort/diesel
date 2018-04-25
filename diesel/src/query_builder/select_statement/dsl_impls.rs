@@ -3,7 +3,7 @@ use backend::Backend;
 use dsl::AsExprOf;
 use expression::*;
 use query_builder::distinct_clause::*;
-use query_builder::for_update_clause::*;
+use query_builder::locking_clause::*;
 use query_builder::group_by_clause::*;
 use query_builder::limit_clause::*;
 use query_builder::offset_clause::*;
@@ -20,12 +20,12 @@ use query_source::joins::{Join, JoinOn, JoinTo};
 use super::BoxedSelectStatement;
 use sql_types::{BigInt, Bool};
 
-impl<F, S, D, W, O, L, Of, G, FU, Rhs, Kind, On> InternalJoinDsl<Rhs, Kind, On>
-    for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<F, S, D, W, O, L, Of, G, LC, Rhs, Kind, On> InternalJoinDsl<Rhs, Kind, On>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
-    SelectStatement<JoinOn<Join<F, Rhs, Kind>, On>, S, D, W, O, L, Of, G, FU>: AsQuery,
+    SelectStatement<JoinOn<Join<F, Rhs, Kind>, On>, S, D, W, O, L, Of, G, LC>: AsQuery,
 {
-    type Output = SelectStatement<JoinOn<Join<F, Rhs, Kind>, On>, S, D, W, O, L, Of, G, FU>;
+    type Output = SelectStatement<JoinOn<Join<F, Rhs, Kind>, On>, S, D, W, O, L, Of, G, LC>;
 
     fn join(self, rhs: Rhs, kind: Kind, on: On) -> Self::Output {
         SelectStatement::new(
@@ -37,18 +37,18 @@ where
             self.limit,
             self.offset,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
 
-impl<F, S, D, W, O, L, Of, G, FU, Selection> SelectDsl<Selection>
-    for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<F, S, D, W, O, L, Of, G, LC, Selection> SelectDsl<Selection>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     Selection: Expression,
-    SelectStatement<F, SelectClause<Selection>, D, W, O, L, Of, G, FU>: Expression,
+    SelectStatement<F, SelectClause<Selection>, D, W, O, L, Of, G, LC>: Expression,
 {
-    type Output = SelectStatement<F, SelectClause<Selection>, D, W, O, L, Of, G, FU>;
+    type Output = SelectStatement<F, SelectClause<Selection>, D, W, O, L, Of, G, LC>;
 
     fn select(self, selection: Selection) -> Self::Output {
         SelectStatement::new(
@@ -60,7 +60,7 @@ where
             self.limit,
             self.offset,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
@@ -82,18 +82,18 @@ where
             self.limit,
             self.offset,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
 
-impl<F, S, D, W, O, L, Of, G, FU, Predicate> FilterDsl<Predicate>
-    for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<F, S, D, W, O, L, Of, G, LC, Predicate> FilterDsl<Predicate>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     Predicate: Expression<SqlType = Bool> + NonAggregate,
     W: WhereAnd<Predicate>,
 {
-    type Output = SelectStatement<F, S, D, W::Output, O, L, Of, G, FU>;
+    type Output = SelectStatement<F, S, D, W::Output, O, L, Of, G, LC>;
 
     fn filter(self, predicate: Predicate) -> Self::Output {
         SelectStatement::new(
@@ -105,18 +105,18 @@ where
             self.limit,
             self.offset,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
 
-impl<F, S, D, W, O, L, Of, G, FU, Predicate> OrFilterDsl<Predicate>
-    for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<F, S, D, W, O, L, Of, G, LC, Predicate> OrFilterDsl<Predicate>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     Predicate: Expression<SqlType = Bool> + NonAggregate,
     W: WhereOr<Predicate>,
 {
-    type Output = SelectStatement<F, S, D, W::Output, O, L, Of, G, FU>;
+    type Output = SelectStatement<F, S, D, W::Output, O, L, Of, G, LC>;
 
     fn or_filter(self, predicate: Predicate) -> Self::Output {
         SelectStatement::new(
@@ -128,7 +128,7 @@ where
             self.limit,
             self.offset,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
@@ -137,7 +137,7 @@ use dsl::Filter;
 use expression_methods::EqAll;
 use query_source::Table;
 
-impl<F, S, D, W, O, L, Of, G, FU, PK> FindDsl<PK> for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<F, S, D, W, O, L, Of, G, LC, PK> FindDsl<PK> for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     F: Table,
     F::PrimaryKey: EqAll<PK>,
@@ -151,14 +151,14 @@ where
     }
 }
 
-impl<ST, F, S, D, W, O, L, Of, G, FU, Expr> OrderDsl<Expr>
-    for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<ST, F, S, D, W, O, L, Of, G, LC, Expr> OrderDsl<Expr>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     Expr: AppearsOnTable<F>,
     Self: Expression<SqlType = ST>,
-    SelectStatement<F, S, D, W, OrderClause<Expr>, L, Of, G, FU>: Expression<SqlType = ST>,
+    SelectStatement<F, S, D, W, OrderClause<Expr>, L, Of, G, LC>: Expression<SqlType = ST>,
 {
-    type Output = SelectStatement<F, S, D, W, OrderClause<Expr>, L, Of, G, FU>;
+    type Output = SelectStatement<F, S, D, W, OrderClause<Expr>, L, Of, G, LC>;
 
     fn order(self, expr: Expr) -> Self::Output {
         let order = OrderClause(expr);
@@ -171,7 +171,7 @@ where
             self.limit,
             self.offset,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
@@ -179,12 +179,12 @@ where
 #[doc(hidden)]
 pub type Limit = AsExprOf<i64, BigInt>;
 
-impl<ST, F, S, D, W, O, L, Of, G, FU> LimitDsl for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<ST, F, S, D, W, O, L, Of, G, LC> LimitDsl for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     Self: Expression<SqlType = ST>,
-    SelectStatement<F, S, D, W, O, LimitClause<Limit>, Of, G, FU>: Expression<SqlType = ST>,
+    SelectStatement<F, S, D, W, O, LimitClause<Limit>, Of, G, LC>: Expression<SqlType = ST>,
 {
-    type Output = SelectStatement<F, S, D, W, O, LimitClause<Limit>, Of, G, FU>;
+    type Output = SelectStatement<F, S, D, W, O, LimitClause<Limit>, Of, G, LC>;
 
     fn limit(self, limit: i64) -> Self::Output {
         let limit_clause = LimitClause(limit.into_sql::<BigInt>());
@@ -197,7 +197,7 @@ where
             limit_clause,
             self.offset,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
@@ -205,12 +205,12 @@ where
 #[doc(hidden)]
 pub type Offset = Limit;
 
-impl<ST, F, S, D, W, O, L, Of, G, FU> OffsetDsl for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<ST, F, S, D, W, O, L, Of, G, LC> OffsetDsl for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     Self: Expression<SqlType = ST>,
-    SelectStatement<F, S, D, W, O, L, OffsetClause<Offset>, G, FU>: Expression<SqlType = ST>,
+    SelectStatement<F, S, D, W, O, L, OffsetClause<Offset>, G, LC>: Expression<SqlType = ST>,
 {
-    type Output = SelectStatement<F, S, D, W, O, L, OffsetClause<Offset>, G, FU>;
+    type Output = SelectStatement<F, S, D, W, O, L, OffsetClause<Offset>, G, LC>;
 
     fn offset(self, offset: i64) -> Self::Output {
         let offset_clause = OffsetClause(offset.into_sql::<BigInt>());
@@ -223,7 +223,7 @@ where
             self.limit,
             offset_clause,
             self.group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
@@ -246,7 +246,7 @@ where
             self.limit,
             self.offset,
             group_by,
-            self.for_update,
+            self.locking,
         )
     }
 }
@@ -261,7 +261,7 @@ impl<F, S, W, O, L, Of> ForUpdateDsl for SelectStatement<F, S, NoDistinctClause,
         L,
         Of,
         NoGroupByClause,
-        ForUpdateClause<ForUpdate, NoModifier>,
+        LockingClause<ForUpdate, NoModifier>,
     >;
 
     fn for_update(self) -> Self::Output {
@@ -274,7 +274,7 @@ impl<F, S, W, O, L, Of> ForUpdateDsl for SelectStatement<F, S, NoDistinctClause,
             self.limit,
             self.offset,
             self.group_by,
-            ForUpdateClause::new(ForUpdate, NoModifier),
+            LockingClause::new(ForUpdate, NoModifier),
         )
     }
 }
@@ -289,7 +289,7 @@ impl<F, S, W, O, L, Of> ForNoKeyUpdateDsl for SelectStatement<F, S, NoDistinctCl
         L,
         Of,
         NoGroupByClause,
-        ForUpdateClause<ForNoKeyUpdate, NoModifier>,
+        LockingClause<ForNoKeyUpdate, NoModifier>,
     >;
 
     fn for_no_key_update(self) -> Self::Output {
@@ -302,15 +302,71 @@ impl<F, S, W, O, L, Of> ForNoKeyUpdateDsl for SelectStatement<F, S, NoDistinctCl
             self.limit,
             self.offset,
             self.group_by,
-            ForUpdateClause::new(ForNoKeyUpdate, NoModifier),
+            LockingClause::new(ForNoKeyUpdate, NoModifier),
+        )
+    }
+}
+
+impl<F, S, W, O, L, Of> ForShareDsl for SelectStatement<F, S, NoDistinctClause, W, O, L, Of> {
+    type Output = SelectStatement<
+        F,
+        S,
+        NoDistinctClause,
+        W,
+        O,
+        L,
+        Of,
+        NoGroupByClause,
+        LockingClause<ForShare, NoModifier>,
+    >;
+
+    fn for_share(self) -> Self::Output {
+        SelectStatement::new(
+            self.select,
+            self.from,
+            self.distinct,
+            self.where_clause,
+            self.order,
+            self.limit,
+            self.offset,
+            self.group_by,
+            LockingClause::new(ForShare, NoModifier),
+        )
+    }
+}
+
+impl<F, S, W, O, L, Of> ForKeyShareDsl for SelectStatement<F, S, NoDistinctClause, W, O, L, Of> {
+    type Output = SelectStatement<
+        F,
+        S,
+        NoDistinctClause,
+        W,
+        O,
+        L,
+        Of,
+        NoGroupByClause,
+        LockingClause<ForKeyShare, NoModifier>,
+    >;
+
+    fn for_key_share(self) -> Self::Output {
+        SelectStatement::new(
+            self.select,
+            self.from,
+            self.distinct,
+            self.where_clause,
+            self.order,
+            self.limit,
+            self.offset,
+            self.group_by,
+            LockingClause::new(ForKeyShare, NoModifier),
         )
     }
 }
 
 impl<F, S, D, W, O, L, Of, G, LM> SkipLockedDsl
-    for SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, NoModifier>>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LockingClause<LM, NoModifier>>
 {
-    type Output = SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, SkipLocked>>;
+    type Output = SelectStatement<F, S, D, W, O, L, Of, G, LockingClause<LM, SkipLocked>>;
 
     fn skip_locked(self) -> Self::Output {
         SelectStatement::new(
@@ -322,15 +378,15 @@ impl<F, S, D, W, O, L, Of, G, LM> SkipLockedDsl
             self.limit,
             self.offset,
             self.group_by,
-            ForUpdateClause::new(self.for_update.lock_mode, SkipLocked),
+            LockingClause::new(self.locking.lock_mode, SkipLocked),
         )
     }
 }
 
 impl<F, S, D, W, O, L, Of, G, LM> NoWaitDsl
-    for SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, NoModifier>>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LockingClause<LM, NoModifier>>
 {
-    type Output = SelectStatement<F, S, D, W, O, L, Of, G, ForUpdateClause<LM, NoWait>>;
+    type Output = SelectStatement<F, S, D, W, O, L, Of, G, LockingClause<LM, NoWait>>;
 
     fn no_wait(self) -> Self::Output {
         SelectStatement::new(
@@ -342,7 +398,7 @@ impl<F, S, D, W, O, L, Of, G, LM> NoWaitDsl
             self.limit,
             self.offset,
             self.group_by,
-            ForUpdateClause::new(self.for_update.lock_mode, NoWait),
+            LockingClause::new(self.locking.lock_mode, NoWait),
         )
     }
 }
@@ -406,7 +462,7 @@ where
     }
 }
 
-impl<F, S, D, W, O, L, Of, G, FU> HasTable for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<F, S, D, W, O, L, Of, G, LC> HasTable for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     F: HasTable,
 {
@@ -435,7 +491,7 @@ where
 // FIXME: Should we disable joining when `.group_by` has been called? Are there
 // any other query methods where a join no longer has the same semantics as
 // joining on just the table?
-impl<F, S, D, W, O, L, Of, G, FU, Rhs> JoinTo<Rhs> for SelectStatement<F, S, D, W, O, L, Of, G, FU>
+impl<F, S, D, W, O, L, Of, G, LC, Rhs> JoinTo<Rhs> for SelectStatement<F, S, D, W, O, L, Of, G, LC>
 where
     F: JoinTo<Rhs>,
 {
@@ -447,8 +503,8 @@ where
     }
 }
 
-impl<F, S, D, W, O, L, Of, G, FU> QueryDsl for SelectStatement<F, S, D, W, O, L, Of, G, FU> {}
+impl<F, S, D, W, O, L, Of, G, LC> QueryDsl for SelectStatement<F, S, D, W, O, L, Of, G, LC> {}
 
-impl<F, S, D, W, O, L, Of, G, FU, Conn> RunQueryDsl<Conn>
-    for SelectStatement<F, S, D, W, O, L, Of, G, FU> {
+impl<F, S, D, W, O, L, Of, G, LC, Conn> RunQueryDsl<Conn>
+    for SelectStatement<F, S, D, W, O, L, Of, G, LC> {
 }

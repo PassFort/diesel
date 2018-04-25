@@ -209,6 +209,12 @@ pub mod helper_types {
     /// Represents the return type of `.for_no_key_update()`
     pub type ForNoKeyUpdate<Source> = <Source as ForNoKeyUpdateDsl>::Output;
 
+    /// Represents the return type of `.for_share()`
+    pub type ForShare<Source> = <Source as ForShareDsl>::Output;
+
+    /// Represents the return type of `.for_key_share()`
+    pub type ForKeyShare<Source> = <Source as ForKeyShareDsl>::Output;
+
     /// Represents the return type of `.skip_locked()`
     pub type SkipLocked<Source> = <Source as SkipLockedDsl>::Output;
 

@@ -61,7 +61,11 @@ pub mod methods {
     pub use super::filter_dsl::*;
     pub use super::limit_dsl::LimitDsl;
     pub use super::load_dsl::{ExecuteDsl, LoadQuery};
-    pub use super::locking_dsl::{ForUpdateDsl, ForNoKeyUpdateDsl, NoWaitDsl, SkipLockedDsl};
+    pub use super::locking_dsl::{
+        ForUpdateDsl, ForNoKeyUpdateDsl,
+        ForShareDsl, ForKeyShareDsl,
+        NoWaitDsl, SkipLockedDsl
+    };
     pub use super::offset_dsl::OffsetDsl;
     pub use super::order_dsl::OrderDsl;
     pub use super::select_dsl::SelectDsl;
@@ -739,10 +743,11 @@ pub trait QueryDsl: Sized {
 
     /// Adds `FOR NO KEY UPDATE` to the end of the select statement.
     ///
-    /// This method is only available for MySQL and PostgreSQL. SQLite does not
-    /// provide any form of row locking.
+    /// This method is only available for PostgreSQL. SQLite does not
+    /// provide any form of row locking, and MySQL does not support anything
+    /// finer than row-level locking.
     ///
-    /// Additionally, `.for_update` cannot be used on queries with a distinct
+    /// Additionally, `.for_no_key_update` cannot be used on queries with a distinct
     /// clause, group by clause, having clause, or any unions. Queries with
     /// a `FOR NO KEY UPDATE` clause cannot be boxed.
     ///
@@ -757,6 +762,51 @@ pub trait QueryDsl: Sized {
             Self: methods::ForNoKeyUpdateDsl,
     {
         methods::ForNoKeyUpdateDsl::for_no_key_update(self)
+    }
+
+    /// Adds `FOR SHARE` to the end of the select statement.
+    ///
+    /// This method is only available for MySQL and PostgreSQL. SQLite does not
+    /// provide any form of row locking.
+    ///
+    /// Additionally, `.for_share` cannot be used on queries with a distinct
+    /// clause, group by clause, having clause, or any unions. Queries with
+    /// a `FOR SHARE` clause cannot be boxed.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Executes `SELECT * FROM users FOR SHARE`
+    /// users.for_share().load(&connection)
+    /// ```
+    fn for_share(self) -> ForShare<Self>
+    where
+        Self: methods::ForShareDsl,
+    {
+        methods::ForShareDsl::for_share(self)
+    }
+
+    /// Adds `FOR KEY SHARE` to the end of the select statement.
+    ///
+    /// This method is only available for PostgreSQL. SQLite does not
+    /// provide any form of row locking, and MySQL does not support anything
+    /// finer than row-level locking.
+    ///
+    /// Additionally, `.for_key_share` cannot be used on queries with a distinct
+    /// clause, group by clause, having clause, or any unions. Queries with
+    /// a `FOR KEY SHARE` clause cannot be boxed.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Executes `SELECT * FROM users FOR KEY SHARE`
+    /// users.for_key_share().load(&connection)
+    /// ```
+    fn for_key_share(self) -> ForKeyShare<Self>
+        where
+            Self: methods::ForKeyShareDsl,
+    {
+        methods::ForKeyShareDsl::for_key_share(self)
     }
 
     /// Adds `SKIP LOCKED` to the end of a `FOR UPDATE` clause.

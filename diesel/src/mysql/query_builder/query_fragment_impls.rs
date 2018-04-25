@@ -1,6 +1,6 @@
 use mysql::Mysql;
 use query_builder::{AstPass, QueryFragment};
-use query_builder::for_update_clause::{NoModifier, NoWait, SkipLocked};
+use query_builder::locking_clause::{NoModifier, NoWait, SkipLocked};
 use result::QueryResult;
 
 impl QueryFragment<Mysql> for NoModifier {
